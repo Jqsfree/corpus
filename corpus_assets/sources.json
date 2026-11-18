@@ -1,0 +1,114 @@
+[
+  {
+    "id": "wordnet",
+    "version": "2024",
+    "kind": "lexicon",
+    "homepage": "https://en-word.net/downloads",
+    "url": "https://en-word.net/static/english-wordnet-2024.xml.gz",
+    "filename": "english-wordnet-2024.xml.gz",
+    "adapter": "wordnet",
+    "license": "CC-BY-4.0; upstream Princeton WordNet license",
+    "review": "documented",
+    "license_url": "https://github.com/globalwordnet/english-wordnet",
+    "attribution": "Open English WordNet Community; Princeton WordNet"
+  },
+  {
+    "id": "youniverse",
+    "version": "4650046",
+    "kind": "titles",
+    "homepage": "https://zenodo.org/records/4650046",
+    "url": "https://zenodo.org/records/4650046/files/yt_metadata_en.jsonl.gz?download=1",
+    "filename": "yt_metadata_en.jsonl.gz",
+    "adapter": "youniverse",
+    "checksum": "md5:0514b2ee52ffaa2c9c27c539038feb60",
+    "license": "REVIEW_REQUIRED",
+    "review": "pending",
+    "license_url": "https://zenodo.org/records/4650046",
+    "attribution": "YouNiverse authors (DOI 10.5281/zenodo.4650046)"
+  },
+  {
+    "id": "iptc",
+    "version": "local-snapshot",
+    "kind": "taxonomy",
+    "homepage": "https://iptc.org/standards/media-topics/",
+    "adapter": "skos",
+    "license": "CC-BY-4.0",
+    "review": "documented",
+    "license_url": "https://iptc.org/standards/newscodes/",
+    "attribution": "IPTC"
+  },
+  {
+    "id": "agrovoc",
+    "version": "local-snapshot",
+    "kind": "lexicon",
+    "homepage": "https://www.fao.org/agrovoc/access",
+    "adapter": "skos",
+    "license": "CC-BY-IGO-3.0 (English; other languages may differ)",
+    "review": "documented",
+    "license_url": "https://aims.fao.org/standards/agrovoc/access-agrovoc",
+    "attribution": "FAO AGROVOC"
+  },
+  {
+    "id": "mesh",
+    "kind": "lexicon",
+    "homepage": "https://www.nlm.nih.gov/databases/download/mesh.html",
+    "version": "unresolved",
+    "license": "REVIEW_REQUIRED",
+    "review": "pending",
+    "adapter": null
+  },
+  {
+    "id": "esco",
+    "kind": "activities",
+    "homepage": "https://esco.ec.europa.eu/en/use-esco/download",
+    "version": "unresolved",
+    "license": "REVIEW_REQUIRED",
+    "review": "pending",
+    "adapter": null
+  },
+  {
+    "id": "onet",
+    "kind": "activities",
+    "homepage": "https://www.onetcenter.org/database.html",
+    "version": "unresolved",
+    "license": "REVIEW_REQUIRED",
+    "review": "pending",
+    "adapter": null
+  },
+  {
+    "id": "wikidata",
+    "kind": "entities",
+    "homepage": "https://www.wikidata.org/wiki/Wikidata:Database_download",
+    "version": "unresolved",
+    "license": "REVIEW_REQUIRED",
+    "review": "pending",
+    "adapter": null
+  },
+  {
+    "id": "categorized-english-words",
+    "kind": "lexicon",
+    "homepage": "https://github.com/rezakhosro/categorized-english-words",
+    "version": "unresolved",
+    "license": "REVIEW_REQUIRED",
+    "review": "pending",
+    "adapter": null
+  },
+  {
+    "id": "funnlp",
+    "kind": "catalog",
+    "homepage": "https://github.com/fighting41love/funNLP",
+    "version": "unresolved",
+    "license": "REVIEW_REQUIRED",
+    "review": "pending",
+    "adapter": null
+  },
+  {
+    "id": "domainwordsdict",
+    "kind": "lexicon",
+    "homepage": "https://github.com/liuhuanyong/DomainWordsDict",
+    "version": "unresolved",
+    "license": "REVIEW_REQUIRED",
+    "review": "pending",
+    "adapter": null
+  }
+]
