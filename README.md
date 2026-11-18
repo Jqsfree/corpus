@@ -1,4 +1,4 @@
-# Corpus Assets (0.4.0)
+# Corpus Assets (0.4.1)
 
 Independent data assets for English YouTube title domain recognition and keyword expansion. The cleaning engine stays separate. Git stores code and manifests; raw data and generated assets stay local.
 
@@ -73,6 +73,26 @@ corpus search --term "hydraulic pump" --limit 20
 corpus export --source mesh --output data/exports/mesh.jsonl
 ```
 SQLite FTS5 supports token/alias search and exact normalized lookups; domain filters apply only to explicit canonical hints. Source and version are retained; identical identities deduplicate, conflicting records fail. Raw title indexes are opt-in with --include-titles (very large disk footprint). JSONL exports carry an index provenance sidecar. The index is rebuilt atomically from listed inputs; omitted inputs are not retained. Use shell quoting for paths containing spaces. No clearing or deletion of raw data.
+
+## Retrieval and batch matching
+
+Two different operations need different algorithms:
+
+* Interactive lookup: SQLite exact indexed lookup and FTS5 inverted index + BM25. Exact full term/alias hits precede BM25; preferred text has weight 2, aliases 1. These weights are initial heuristics, not measured optima.
+* Batch title matching: construct a domain-aware dictionary once and stream JSONL titles. Default auto chooses optional C-backed Aho-Corasick if installed; otherwise use bounded token n-gram hash lookup. Both emit the same evidence. No per-title SQL query, model call or automatic rejection.
+
+```bash
+pip install -e '.[fast]'
+corpus search --term "tractor repair" --mode phrase
+corpus search --term "tractor engine" --mode any --domain agriculture
+corpus search --term "tract" --mode prefix
+corpus search --term "tractor" --mode exact
+corpus match --input titles.jsonl --output data/matched.jsonl --domain agriculture --backend auto
+```
+
+Only canonical-domain lexicon/taxonomy/entity/activity records enter the matcher. Unknown domains, weak platform category features, and raw titles are deliberately excluded. JSONL input requires a title field (override with --field); every input row survives, with corpus_match evidence and domain hit counts. Casefold/NFKC and punctuation-separated word tokens prevent substring false matches (tractor vs contractor). Punctuation-sensitive terms and short acronyms need separate handling; default minimum 3 nonspace characters and max 5 tokens. No stemming or embedding expansion is applied. Overlapping and multi-domain hits remain observable, and scores are not probabilities. Large dictionaries should be scoped with repeatable --domain/--source. Memory/throughput on actual data remains unmeasured. Existing index format remains compatible.
+
+References: [SQLite FTS5](https://www.sqlite.org/fts5.html), [pyahocorasick](https://pyahocorasick.readthedocs.io/en/latest/).
 
 ## Roadmap
 - P0: registry, acquisition, streaming adapters, validation and fixture tests.

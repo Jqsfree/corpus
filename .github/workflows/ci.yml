@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      - run: python -m pip install .
+      - run: python -m pip install '.[fast]'
       - run: python -m unittest discover -s tests -v
       - run: corpus sources list
       - name: Installed CLI end-to-end smoke test
@@ -29,3 +29,6 @@ jobs:
           corpus --root "$ROOT" search --term tractor --exact --domain agriculture
           corpus --root "$ROOT" export --domain agriculture --output "$ROOT/agriculture.jsonl"
           test -s "$ROOT/agriculture.jsonl"
+          printf '%s\n' '{"title":"tractor repair"}' > "$ROOT/titles.jsonl"
+          corpus --root "$ROOT" match --input "$ROOT/titles.jsonl" --output "$ROOT/matched.jsonl" --backend aho
+          test -s "$ROOT/matched.jsonl"

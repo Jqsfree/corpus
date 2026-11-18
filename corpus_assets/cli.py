@@ -6,6 +6,7 @@ from pathlib import Path
 from .core import registry, require_source, download, build, validate
 from .analytics import title_features
 from .index import index_build, search, export
+from .matching import match_file
 
 
 def main(argv=None):
@@ -43,12 +44,24 @@ def main(argv=None):
     p.add_argument("--term", required=True)
     p.add_argument("--domain")
     p.add_argument("--exact", action="store_true")
+    p.add_argument("--mode", choices=["all","any","phrase","prefix","exact"], default="all")
+    p.add_argument("--source")
     p.add_argument("--limit", type=int, default=20)
     p = commands.add_parser("export")
     p.add_argument("--index", type=Path)
     p.add_argument("--output", required=True, type=Path)
     p.add_argument("--domain")
     p.add_argument("--source")
+    p = commands.add_parser("match")
+    p.add_argument("--index", type=Path)
+    p.add_argument("--input", type=Path, required=True)
+    p.add_argument("--output", type=Path, required=True)
+    p.add_argument("--domain", action="append")
+    p.add_argument("--source", action="append")
+    p.add_argument("--backend", choices=["auto","hash","aho"],default="auto")
+    p.add_argument("--min-chars", type=int, default=3)
+    p.add_argument("--max-tokens",type=int,default=5)
+    p.add_argument("--field",default="title")
     args = parser.parse_args(argv)
     default_index = args.root/"index"/"corpus.sqlite"
     try:
@@ -65,7 +78,9 @@ def main(argv=None):
         elif args.command == "index":
             result = index_build(args.input,args.output or default_index,args.include_titles)
         elif args.command == "search":
-            result = search(args.index or default_index,args.term,args.limit,args.domain,args.exact)
+            result = search(args.index or default_index,args.term,args.limit,args.domain,args.exact,args.mode,args.source)
+        elif args.command == "match":
+            result = match_file(args.index or default_index,args.input,args.output,args.domain,args.source,args.backend,args.min_chars,args.max_tokens,args.field)
         elif args.command == "export":
             result = export(args.index or default_index,args.output,args.domain,args.source)
         else:
