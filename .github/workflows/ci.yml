@@ -1,0 +1,31 @@
+name: CI
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install .
+      - run: python -m unittest discover -s tests -v
+      - run: corpus sources list
+      - name: Installed CLI end-to-end smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT=$(mktemp -d)
+          SEEDS=$(corpus --root "$ROOT" build --source domain-seeds)
+          corpus --root "$ROOT" validate --input "$SEEDS"
+          corpus --root "$ROOT" index --input "$SEEDS"
+          corpus --root "$ROOT" search --term tractor --exact --domain agriculture
+          corpus --root "$ROOT" export --domain agriculture --output "$ROOT/agriculture.jsonl"
+          test -s "$ROOT/agriculture.jsonl"

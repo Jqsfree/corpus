@@ -1,0 +1,1 @@
+"""Independent corpus resource management."""
