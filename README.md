@@ -58,13 +58,13 @@ corpus build --source wikidata --snapshot YOUR_DATE --input /path/to/selected-en
 corpus build --source categorized-english-words --snapshot YOUR_COMMIT --category engineering --input /path/to/engineering.txt --acknowledge-terms
 ```
 
-MeSH input is descriptor XML; ESCO English CSV occupations or skills; O*NET tab-delimited occupation or task records; Wikidata input is selected native entity objects as JSONL, not the massive full dump; categorized wordlist is one UTF-8 term per line. License acknowledgements mean you have reviewed permission; they are not license grants. AGROVOC direct-SKOS RDF/XML only; SKOS-XL conversion is still pending. Only the curated seed terms and MeSH provide canonical domain hints at present. IPTC parents and other upstream categories are preserved, not silently mapped to project domains.
+MeSH input is descriptor XML; ESCO English CSV occupations or skills; O*NET tab-delimited occupation or task records; Wikidata input is selected native entity objects as JSONL, not the massive full dump; categorized wordlist is one UTF-8 term per line. License acknowledgements mean you have reviewed permission; they are not license grants. AGROVOC direct-SKOS RDF/XML only; SKOS-XL conversion is still pending. Seed terms and MeSH carry explicit hints. At index time, selected IPTC concept IDs and their descendants map through the project taxonomy (mapping hash recorded); ambiguous/unmapped concepts and other upstream labels are not forcibly mapped. Search/export show these as index_domain_hints.
 
 After YouNiverse full normalization, calculate title-only weak category features:
 ```bash
 corpus features --input PATH_TO_FULL_TITLES_JSONL --output data/features/category_terms.jsonl --per-category 5000 --min-df 5 --top 1000
 ```
-Sampling is deterministic bottom-k by video ID per category (bounded memory), with observed counts, sample provenance, unigram/bigram document frequency and smoothed log prevalence ratio against other categories. These are weak signals, not probabilities or verified domain labels. A prefix-limited input will bias the results. Features are separate artifacts and are not implicitly promoted into lexicons.
+Sampling is deterministic bottom-k by video ID per category (bounded memory), with observed counts, sample provenance, unigram/bigram document frequency and smoothed log prevalence ratio against other categories. These are weak signals, not probabilities or verified domain labels. A prefix-limited input will bias the results. Features are separate weak-evidence artifacts and are not implicitly promoted into lexicons. When nonempty, the command also produces a normalized *.indexable.jsonl artifact with provenance so it can be indexed alongside the lexicons.
 
 Build an index from explicit normalized JSONL paths (not raw files or feature outputs):
 ```bash
@@ -76,7 +76,7 @@ SQLite FTS5 supports token/alias search and exact normalized lookups; domain fil
 
 ## Roadmap
 - P0: registry, acquisition, streaming adapters, validation and fixture tests.
-- P1: seed taxonomy and manual domain resource adapters; full upstream-to-canonical mappings remain pending.
+- P1: seed taxonomy and manual domain resource adapters; selected IPTC hierarchy mappings; no exhaustive mapping.
 - P2: selected entity, alias and activity adapters; no full dump materialized.
 - P3: deterministic category sampling and weak-label title statistics; real corpus run pending.
 - P4: SQLite FTS5 and provenance exports; performance at scale pending.

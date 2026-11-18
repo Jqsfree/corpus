@@ -225,5 +225,45 @@
         "habitat"
       ]
     }
-  ]
+  ],
+  "iptc_anchors": {
+    "13000000": [
+      "science"
+    ],
+    "15000000": [
+      "sports"
+    ],
+    "20000210": [
+      "agriculture"
+    ],
+    "20000231": [
+      "software"
+    ],
+    "20000294": [
+      "manufacturing"
+    ],
+    "20000461": [
+      "healthcare"
+    ],
+    "20000464": [
+      "healthcare"
+    ],
+    "20000763": [
+      "software",
+      "science"
+    ],
+    "20001245": [
+      "construction"
+    ],
+    "01000000": [
+      "arts"
+    ],
+    "05000000": [
+      "education"
+    ],
+    "06000000": [
+      "environment"
+    ]
+  },
+  "mapping_note": "Project domain hints from IPTC concept ID and broader ancestry. Not a gold label; no forced mapping for unmapped concepts. Source: https://iptc.org/std/NewsCodes/treeview/mediatopic/mediatopic-en-US.html"
 }

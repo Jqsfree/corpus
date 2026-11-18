@@ -6,7 +6,7 @@ import math
 import re
 from collections import Counter, defaultdict
 from pathlib import Path
-from .core import atomic_output, digest, normalized, validate
+from .core import atomic_output, digest, normalized, validate, record
 
 TOKEN = re.compile(r"[^\W_]+(?:['’-][^\W_]+)*", re.UNICODE)
 
@@ -63,6 +63,8 @@ def title_features(path, output, per_category=1000, seed="corpus-v1", min_df=3, 
     for counter in category_df.values():
         pooled.update(counter)
     output = Path(output)
+    if Path(path).resolve() in {output.resolve(), Path(str(output)+".samples.jsonl").resolve(), Path(str(output)+".manifest.json").resolve(), Path(str(output)+".indexable.jsonl").resolve()}:
+        raise ValueError("Feature output must not overwrite input")
     with atomic_output(output) as stream:
         for label, counter in sorted(category_df.items()):
             size = len(samples[label])
@@ -94,4 +96,24 @@ def title_features(path, output, per_category=1000, seed="corpus-v1", min_df=3, 
                   caveat="Category-stratified hash sample, not channel-balanced; platform labels overlap and are not QC truth.")
     with atomic_output(str(output)+".manifest.json") as stream:
         json.dump(report, stream, indent=2, sort_keys=True)
+    # A separate normalized artifact makes weak features searchable without indexing raw titles.
+    indexable = Path(str(output)+".indexable.jsonl")
+    feature_version = hashlib.sha256(json.dumps(report,sort_keys=True).encode()).hexdigest()
+    source = dict(manifest["source"],id=manifest["source"]["id"]+"-features",version=feature_version,kind="weak_features")
+    count = 0
+    with output.open(encoding="utf-8") as rows, atomic_output(indexable) as stream:
+        for line in rows:
+            feature=json.loads(line)
+            key=hashlib.sha256((feature["category"]+"\0"+feature["term"]).encode()).hexdigest()
+            item=record(source,key,feature["term"],weak_labels=[feature["category"]],feature=feature)
+            stream.write(json.dumps(item,ensure_ascii=False,sort_keys=True)+"\n")
+            count+=1
+    if count:
+        sidecar=dict(source=source,input_sha256=report["output_sha256"],output_sha256=digest(indexable),schema_version=1,counts=dict(read=count,written=count),feature_provenance=report)
+        with atomic_output(str(indexable)+".manifest.json") as stream:
+            json.dump(sidecar,stream,indent=2,sort_keys=True)
+        report["indexable_path"]=str(indexable)
+    else:
+        indexable.unlink(missing_ok=True)
+        Path(str(indexable)+".manifest.json").unlink(missing_ok=True)
     return report

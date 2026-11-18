@@ -22,8 +22,34 @@ CREATE TABLE metadata(key TEXT PRIMARY KEY, value TEXT NOT NULL);
 """
 
 
+def apply_domain_mapping(db):
+    taxonomy_path = Path(__file__).with_name("taxonomy.json")
+    taxonomy = json.loads(taxonomy_path.read_text())
+    anchors = taxonomy["iptc_anchors"]
+    valid = {d["id"] for d in taxonomy["domains"]}
+    nodes = {}
+    for key, version, payload in db.execute("SELECT id,version,payload FROM records WHERE source='iptc'"):
+        item = json.loads(payload)
+        concept = item["record_id"].rstrip("/").rsplit("/",1)[-1]
+        parents = [p.rstrip("/").rsplit("/",1)[-1] for p in item.get("broader",[])]
+        nodes[(version,concept)] = (key,parents)
+    for (version,concept),(key,_) in nodes.items():
+        visited, pending, hints = set(), [concept], set()
+        while pending:
+            node = pending.pop()
+            if node in visited:
+                continue
+            visited.add(node)
+            hints.update(anchors.get(node,[]))
+            pending.extend(nodes.get((version,node),(None,[]))[1])
+        db.executemany("INSERT OR IGNORE INTO domains VALUES (?,?)",[(key,d) for d in sorted(hints & valid)])
+    return {"taxonomy_version":taxonomy["version"],"taxonomy_sha256":digest(taxonomy_path),"mapped_iptc_records":db.execute("SELECT COUNT(DISTINCT d.record) FROM domains d JOIN records r ON r.id=d.record WHERE r.source='iptc'").fetchone()[0]}
+
+
 def index_build(paths, output, include_titles=False):
     output = Path(output)
+    if any(Path(p).resolve() == output.resolve() for p in paths):
+        raise ValueError("Index output must not overwrite input")
     output.parent.mkdir(parents=True, exist_ok=True)
     fd, name = tempfile.mkstemp(dir=output.parent, suffix=".sqlite.part")
     os.close(fd)
@@ -60,7 +86,8 @@ def index_build(paths, output, include_titles=False):
                             db.commit()
             if not written:
                 raise ValueError("Empty index")
-            report = dict(schema_version=1, records=written, duplicate_records=duplicates, inputs=metadata)
+            mapping = apply_domain_mapping(db)
+            report = dict(schema_version=1, records=written, duplicate_records=duplicates, inputs=metadata, mapping=mapping)
             db.execute("INSERT INTO metadata VALUES (?,?)",("manifest",json.dumps(report,sort_keys=True)))
         os.replace(name,output)
         return report
@@ -77,16 +104,24 @@ def search(path, term, limit=20, domain=None, exact=False):
         raise ValueError("Nonempty term and limit 1..1000 required")
     where = " AND EXISTS(SELECT 1 FROM domains d WHERE d.record=r.id AND d.domain=?)" if domain else ""
     if exact:
-        sql = "SELECT r.payload FROM terms t JOIN records r ON r.id=t.record WHERE t.term=?"+where+" ORDER BY r.id LIMIT ?"
+        sql = "SELECT r.id,r.payload FROM terms t JOIN records r ON r.id=t.record WHERE t.term=?"+where+" ORDER BY r.id LIMIT ?"
         value = normalized(term)
     else:
         words = re.findall(r"[^\W_]+", term, re.UNICODE)
         if not words:
             raise ValueError("No searchable tokens")
         value = " AND ".join('"'+w+'"' for w in words)
-        sql = "SELECT r.payload FROM search JOIN records r ON r.id=search.rowid WHERE search MATCH ?"+where+" ORDER BY bm25(search),r.id LIMIT ?"
+        sql = "SELECT r.id,r.payload FROM search JOIN records r ON r.id=search.rowid WHERE search MATCH ?"+where+" ORDER BY bm25(search),r.id LIMIT ?"
     with connect(path) as db:
-        return [json.loads(row[0]) for row in db.execute(sql,[value]+([domain] if domain else [])+[limit])]
+        return [with_hints(db,key,payload) for key,payload in db.execute(sql,[value]+([domain] if domain else [])+[limit])]
+
+
+def with_hints(db, key, payload):
+    item = json.loads(payload)
+    hints = [row[0] for row in db.execute("SELECT domain FROM domains WHERE record=? ORDER BY domain",(key,))]
+    if hints:
+        item["index_domain_hints"] = hints
+    return item
 
 
 def export(path, output, domain=None, source=None):
@@ -99,12 +134,12 @@ def export(path, output, domain=None, source=None):
     if source:
         filters.append("r.source=?")
         args.append(source)
-    query = "SELECT payload FROM records r"+(" WHERE "+" AND ".join(filters) if filters else "")+" ORDER BY source,version,record_id"
+    query = "SELECT id,payload FROM records r"+(" WHERE "+" AND ".join(filters) if filters else "")+" ORDER BY source,version,record_id"
     count = 0
     with connect(path) as db, atomic_output(output) as stream:
         meta = json.loads(db.execute("SELECT value FROM metadata WHERE key='manifest'").fetchone()[0])
-        for (row,) in db.execute(query,args):
-            stream.write(row+"\n")
+        for key,payload in db.execute(query,args):
+            stream.write(json.dumps(with_hints(db,key,payload),ensure_ascii=False,sort_keys=True)+"\n")
             count += 1
     report = dict(index_manifest=meta, index_sha256=digest(path), output_sha256=digest(output),
                   filters=dict(domain=domain,source=source), count=count, schema_version=1)

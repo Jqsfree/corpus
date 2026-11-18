@@ -187,7 +187,10 @@ def build(source, input_path, root, limit=None, snapshot=None):
     verify_upstream(input_path, source)
     raw_sha = digest(input_path)
     suffix = "full" if limit is None else f"sample-{limit}"
-    target = Path(root) / "processed" / source["id"] / source["version"] / raw_sha / (suffix + ".jsonl")
+    target = Path(root) / "processed" / source["id"] / source["version"] / raw_sha
+    if source.get("upstream_category"):
+        target /= hashlib.sha256(source["upstream_category"].encode()).hexdigest()
+    target /= suffix + ".jsonl"
     counts = Counter()
     with open_input(input_path) as src, atomic_output(target) as out:
         for item in ADAPTERS[source["adapter"]](src, source):

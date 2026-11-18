@@ -69,3 +69,17 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(Path(str(first)+".samples.jsonl").read_bytes(),Path(str(second)+".samples.jsonl").read_bytes())
             with self.assertRaises(ValueError):
                 index_build([out],root/"db.sqlite")
+            indexable=Path(report["indexable_path"])
+            index_build([indexable],root/"features.sqlite")
+            self.assertEqual(search(root/"features.sqlite","wheat harvest",exact=True)[0]["weak_labels"],["A"])
+
+    def test_iptc_inherited_mapping(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            raw=root/"topics.rdf"
+            raw.write_text('<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:skos="http://www.w3.org/2004/02/skos/core#"><skos:Concept rdf:about="http://cv.iptc.org/newscodes/mediatopic/20000210"><skos:prefLabel xml:lang="en">Agriculture</skos:prefLabel></skos:Concept><skos:Concept rdf:about="urn/topic/child"><skos:prefLabel xml:lang="en">Crop cultivation</skos:prefLabel><skos:broader rdf:resource="http://cv.iptc.org/newscodes/mediatopic/20000210"/></skos:Concept></rdf:RDF>')
+            out=build(registry()["iptc"],raw,root,snapshot="fixture")
+            db=root/"topics.sqlite"
+            index_build([out],db)
+            self.assertEqual(search(db,"Crop cultivation",domain="agriculture",exact=True)[0]["index_domain_hints"],["agriculture"])
+
