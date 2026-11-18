@@ -4,6 +4,8 @@ import os
 import sys
 from pathlib import Path
 from .core import registry, require_source, download, build, validate
+from .analytics import title_features
+from .index import index_build, search, export
 
 
 def main(argv=None):
@@ -17,28 +19,75 @@ def main(argv=None):
         p.add_argument("--source", required=True, choices=registry())
         p.add_argument("--acknowledge-terms", action="store_true")
         if name == "build":
-            p.add_argument("--input", required=True, type=Path)
+            p.add_argument("--input", type=Path)
             p.add_argument("--limit", type=int)
             p.add_argument("--snapshot")
+            p.add_argument("--category", help="Upstream category for plain word lists")
     for name in ("validate", "stats"):
         p = commands.add_parser(name)
         p.add_argument("--input", required=True, type=Path)
+    p = commands.add_parser("taxonomy")
+    p = commands.add_parser("features")
+    p.add_argument("--input", required=True, type=Path)
+    p.add_argument("--output", required=True, type=Path)
+    p.add_argument("--per-category", type=int, default=1000)
+    p.add_argument("--seed", default="corpus-v1")
+    p.add_argument("--min-df", type=int, default=3)
+    p.add_argument("--top", type=int, default=500)
+    p = commands.add_parser("index")
+    p.add_argument("--input", required=True, nargs="+", type=Path)
+    p.add_argument("--output", type=Path)
+    p.add_argument("--include-titles", action="store_true")
+    p = commands.add_parser("search")
+    p.add_argument("--index", type=Path)
+    p.add_argument("--term", required=True)
+    p.add_argument("--domain")
+    p.add_argument("--exact", action="store_true")
+    p.add_argument("--limit", type=int, default=20)
+    p = commands.add_parser("export")
+    p.add_argument("--index", type=Path)
+    p.add_argument("--output", required=True, type=Path)
+    p.add_argument("--domain")
+    p.add_argument("--source")
     args = parser.parse_args(argv)
+    default_index = args.root/"index"/"corpus.sqlite"
     try:
         if args.command == "sources":
-            print(json.dumps(list(registry().values()), indent=2, ensure_ascii=False))
+            result = list(registry().values())
+        elif args.command == "taxonomy":
+            result = json.loads(Path(__file__).with_name("taxonomy.json").read_text())
         elif args.command in ("validate", "stats"):
             result = validate(args.input)
-            print(json.dumps(result if args.command == "validate" else result["counts"], indent=2))
+            if args.command == "stats":
+                result = result["counts"]
+        elif args.command == "features":
+            result = title_features(args.input,args.output,args.per_category,args.seed,args.min_df,args.top)
+        elif args.command == "index":
+            result = index_build(args.input,args.output or default_index,args.include_titles)
+        elif args.command == "search":
+            result = search(args.index or default_index,args.term,args.limit,args.domain,args.exact)
+        elif args.command == "export":
+            result = export(args.index or default_index,args.output,args.domain,args.source)
         else:
             source = require_source(args.source, args.acknowledge_terms)
             if args.command == "download":
-                print(download(source, args.root))
-            else:
-                print(build(source, args.input, args.root, args.limit, args.snapshot))
+                print(download(source,args.root))
+                return 0
+            if args.category:
+                if source["adapter"] != "wordlist":
+                    raise ValueError("--category applies only to wordlist")
+                source = dict(source,upstream_category=args.category)
+            input_path = args.input
+            if input_path is None and args.source == "domain-seeds":
+                input_path = Path(__file__).with_name("taxonomy.json")
+            if input_path is None:
+                raise ValueError("--input is required for external sources")
+            print(build(source,input_path,args.root,args.limit,args.snapshot))
+            return 0
+        print(json.dumps(result,indent=2,ensure_ascii=False))
         return 0
-    except (OSError, ValueError, KeyError) as exc:
-        print(f"corpus: {exc}", file=sys.stderr)
+    except (OSError, ValueError, KeyError, RuntimeError) as exc:
+        print(f"corpus: {exc}",file=sys.stderr)
         return 1
 
 

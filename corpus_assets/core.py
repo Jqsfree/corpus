@@ -152,7 +152,11 @@ def iter_skos(stream, source):
         stack.pop()
 
 
-ADAPTERS = {"wordnet": iter_wordnet, "youniverse": iter_titles, "skos": iter_skos}
+from .adapters import iter_mesh, iter_esco, iter_onet, iter_wikidata, iter_wordlist, iter_seeds
+
+ADAPTERS = {"wordnet": iter_wordnet, "youniverse": iter_titles, "skos": iter_skos,
+            "mesh": iter_mesh, "esco": iter_esco, "onet": iter_onet,
+            "wikidata": iter_wikidata, "wordlist": iter_wordlist, "seeds": iter_seeds}
 
 
 @contextmanager

@@ -52,46 +52,56 @@
     "id": "mesh",
     "kind": "lexicon",
     "homepage": "https://www.nlm.nih.gov/databases/download/mesh.html",
-    "version": "unresolved",
+    "version": "local-snapshot",
     "license": "REVIEW_REQUIRED",
     "review": "pending",
-    "adapter": null
+    "adapter": "mesh",
+    "license_url": "https://www.nlm.nih.gov/databases/download/mesh.html",
+    "attribution": "US National Library of Medicine"
   },
   {
     "id": "esco",
     "kind": "activities",
     "homepage": "https://esco.ec.europa.eu/en/use-esco/download",
-    "version": "unresolved",
+    "version": "local-snapshot",
     "license": "REVIEW_REQUIRED",
     "review": "pending",
-    "adapter": null
+    "adapter": "esco",
+    "license_url": "https://esco.ec.europa.eu/en/copyright-notice-esco-skills-competences",
+    "attribution": "European Commission ESCO"
   },
   {
     "id": "onet",
     "kind": "activities",
     "homepage": "https://www.onetcenter.org/database.html",
-    "version": "unresolved",
+    "version": "local-snapshot",
     "license": "REVIEW_REQUIRED",
     "review": "pending",
-    "adapter": null
+    "adapter": "onet",
+    "license_url": "https://www.onetcenter.org/license.html",
+    "attribution": "O*NET, US Department of Labor"
   },
   {
     "id": "wikidata",
     "kind": "entities",
     "homepage": "https://www.wikidata.org/wiki/Wikidata:Database_download",
-    "version": "unresolved",
-    "license": "REVIEW_REQUIRED",
-    "review": "pending",
-    "adapter": null
+    "version": "local-snapshot",
+    "license": "CC0-1.0 structured data",
+    "review": "documented",
+    "adapter": "wikidata",
+    "license_url": "https://www.wikidata.org/wiki/Wikidata:Licensing",
+    "attribution": "Wikidata contributors"
   },
   {
     "id": "categorized-english-words",
     "kind": "lexicon",
     "homepage": "https://github.com/rezakhosro/categorized-english-words",
-    "version": "unresolved",
+    "version": "local-snapshot",
     "license": "REVIEW_REQUIRED",
     "review": "pending",
-    "adapter": null
+    "adapter": "wordlist",
+    "license_url": "https://github.com/rezakhosro/categorized-english-words",
+    "attribution": "rezakhosro; AI-assisted source; unvalidated category quality"
   },
   {
     "id": "funnlp",
@@ -110,5 +120,15 @@
     "license": "REVIEW_REQUIRED",
     "review": "pending",
     "adapter": null
+  },
+  {
+    "id": "domain-seeds",
+    "version": "1",
+    "kind": "lexicon",
+    "homepage": "https://github.com/Jqsfree/corpus",
+    "adapter": "seeds",
+    "license": "Project-authored seed vocabulary",
+    "review": "documented",
+    "attribution": "corpus project"
   }
 ]

@@ -1,4 +1,4 @@
-# Corpus Assets
+# Corpus Assets (0.4.0)
 
 Independent data assets for English YouTube title domain recognition and keyword expansion. The cleaning engine stays separate. Git stores code and manifests; raw data and generated assets stay local.
 
@@ -30,19 +30,56 @@ IPTC and AGROVOC support manually downloaded RDF/XML snapshots with direct Engli
 ```bash
 corpus build --source iptc --input /path/to/mediatopic.rdf --snapshot YOUR_VERSION
 ```
-SKOS-XL-only snapshots need conversion; live files are not yet tested. Other registered sources are candidates, not implemented adapters.
+SKOS-XL-only snapshots need conversion; live files are not yet tested. MeSH, ESCO, O*NET, selected Wikidata JSONL and categorized wordlist adapters are now available as manual imports; funNLP and DomainWordsDict remain registered reference sources.
 
 Use `CORPUS_ROOT=/path/to/storage` or `corpus --root /path/to/storage ...` to keep large assets off the repo disk.
 
 ## Data contract
 Each JSONL record contains schema_version, source_id, source_version, kind, record_id, language, text, normalized_text. Source-specific fields preserve weak platform categories, synset references, relations or taxonomy parents. A sidecar manifest records the source/license, input and output SHA-256 and row counts. Content-addressed output paths separate snapshots and limited/full builds. Normalization is Unicode NFKC, casefold and whitespace normalization. IDs are not deduplicated yet. English selection for YouNiverse is channel-level, not proof of each title's language. No domain classification accuracy is asserted.
 
+## P1–P4: local workflow
+
+```bash
+corpus taxonomy
+SEEDS=$(corpus build --source domain-seeds)
+corpus validate --input "$SEEDS"
+corpus index --input "$SEEDS"
+corpus search --term tractor --exact
+corpus export --domain agriculture --output data/exports/agriculture.jsonl
+```
+
+The bundled taxonomy is an initial English seed vocabulary, not a trained classifier or a comprehensive ontology. For external sources manually download and unpack the named format from the registry homepage, review the terms, and pin the actual upstream snapshot:
+
+```bash
+corpus build --source mesh --snapshot 2026 --input /path/to/desc2026.xml --acknowledge-terms
+corpus build --source esco --snapshot 1.2.0 --input /path/to/skills_en.csv --acknowledge-terms
+corpus build --source onet --snapshot 31.0 --input "/path/to/Task Statements.txt" --acknowledge-terms
+corpus build --source wikidata --snapshot YOUR_DATE --input /path/to/selected-entities.jsonl
+corpus build --source categorized-english-words --snapshot YOUR_COMMIT --category engineering --input /path/to/engineering.txt --acknowledge-terms
+```
+
+MeSH input is descriptor XML; ESCO English CSV occupations or skills; O*NET tab-delimited occupation or task records; Wikidata input is selected native entity objects as JSONL, not the massive full dump; categorized wordlist is one UTF-8 term per line. License acknowledgements mean you have reviewed permission; they are not license grants. AGROVOC direct-SKOS RDF/XML only; SKOS-XL conversion is still pending. Only the curated seed terms and MeSH provide canonical domain hints at present. IPTC parents and other upstream categories are preserved, not silently mapped to project domains.
+
+After YouNiverse full normalization, calculate title-only weak category features:
+```bash
+corpus features --input PATH_TO_FULL_TITLES_JSONL --output data/features/category_terms.jsonl --per-category 5000 --min-df 5 --top 1000
+```
+Sampling is deterministic bottom-k by video ID per category (bounded memory), with observed counts, sample provenance, unigram/bigram document frequency and smoothed log prevalence ratio against other categories. These are weak signals, not probabilities or verified domain labels. A prefix-limited input will bias the results. Features are separate artifacts and are not implicitly promoted into lexicons.
+
+Build an index from explicit normalized JSONL paths (not raw files or feature outputs):
+```bash
+corpus index --input PATH_TO_SEEDS_JSONL PATH_TO_WORDNET_JSONL PATH_TO_MESH_JSONL
+corpus search --term "hydraulic pump" --limit 20
+corpus export --source mesh --output data/exports/mesh.jsonl
+```
+SQLite FTS5 supports token/alias search and exact normalized lookups; domain filters apply only to explicit canonical hints. Source and version are retained; identical identities deduplicate, conflicting records fail. Raw title indexes are opt-in with --include-titles (very large disk footprint). JSONL exports carry an index provenance sidecar. The index is rebuilt atomically from listed inputs; omitted inputs are not retained. Use shell quoting for paths containing spaces. No clearing or deletion of raw data.
+
 ## Roadmap
 - P0: registry, acquisition, streaming adapters, validation and fixture tests.
-- P1: licensed domain vocabularies, canonical domain taxonomy and mapping.
-- P2: entity, alias and activity resources.
-- P3: representative category sampling, title term statistics and weak-label features.
-- P4: searchable index and versioned exports.
+- P1: seed taxonomy and manual domain resource adapters; full upstream-to-canonical mappings remain pending.
+- P2: selected entity, alias and activity adapters; no full dump materialized.
+- P3: deterministic category sampling and weak-label title statistics; real corpus run pending.
+- P4: SQLite FTS5 and provenance exports; performance at scale pending.
 - P5: integrate with data-cleaning-infra and validate on real title/QC samples.
 
 Upstream terms may differ between data and code; retain attribution and review before commercial use or redistribution. No upstream datasets are included. Do not treat platform categories as business QC labels.

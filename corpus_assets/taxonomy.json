@@ -1,0 +1,229 @@
+{
+  "version": "1",
+  "description": "Project-authored seed taxonomy, not exhaustive or externally validated; domains may overlap.",
+  "domains": [
+    {
+      "id": "agriculture",
+      "label": "Agriculture, forestry and fishing",
+      "terms": [
+        "farming",
+        "harvest",
+        "irrigation",
+        "livestock",
+        "aquaculture",
+        "forestry",
+        "combine harvester",
+        "tractor",
+        "milking",
+        "seedling"
+      ]
+    },
+    {
+      "id": "manufacturing",
+      "label": "Manufacturing and industrial production",
+      "terms": [
+        "machining",
+        "welding",
+        "assembly line",
+        "CNC milling",
+        "injection molding",
+        "metal casting",
+        "factory",
+        "lathe",
+        "quality inspection"
+      ]
+    },
+    {
+      "id": "construction",
+      "label": "Construction and infrastructure",
+      "terms": [
+        "bricklaying",
+        "concrete pouring",
+        "roofing",
+        "excavation",
+        "scaffolding",
+        "plumbing",
+        "carpentry",
+        "road construction"
+      ]
+    },
+    {
+      "id": "healthcare",
+      "label": "Healthcare and medicine",
+      "terms": [
+        "surgery",
+        "physical therapy",
+        "nursing",
+        "dentistry",
+        "ultrasound",
+        "medical examination",
+        "patient care",
+        "endoscopy"
+      ]
+    },
+    {
+      "id": "software",
+      "label": "Computing and software",
+      "terms": [
+        "software development",
+        "debugging",
+        "database",
+        "web browser",
+        "spreadsheet",
+        "programming",
+        "Linux",
+        "web scraping"
+      ]
+    },
+    {
+      "id": "sports",
+      "label": "Sports and fitness",
+      "terms": [
+        "basketball",
+        "football",
+        "gymnastics",
+        "weightlifting",
+        "swimming",
+        "tennis",
+        "marathon",
+        "fitness training"
+      ]
+    },
+    {
+      "id": "commerce",
+      "label": "Commerce and retail",
+      "terms": [
+        "retail",
+        "product demonstration",
+        "live shopping",
+        "checkout",
+        "merchandising",
+        "sales",
+        "warehouse order fulfillment"
+      ]
+    },
+    {
+      "id": "transport",
+      "label": "Transportation and automotive",
+      "terms": [
+        "vehicle maintenance",
+        "driving",
+        "car repair",
+        "freight transport",
+        "aircraft",
+        "railway",
+        "engine repair"
+      ]
+    },
+    {
+      "id": "food",
+      "label": "Food and hospitality",
+      "terms": [
+        "cooking",
+        "baking",
+        "food preparation",
+        "restaurant",
+        "barista",
+        "pastry",
+        "knife skills"
+      ]
+    },
+    {
+      "id": "education",
+      "label": "Education and training",
+      "terms": [
+        "classroom",
+        "lesson",
+        "teaching",
+        "lecture",
+        "school",
+        "training course"
+      ]
+    },
+    {
+      "id": "finance",
+      "label": "Finance and economics",
+      "terms": [
+        "stock market",
+        "investment",
+        "accounting",
+        "interest rate",
+        "financial analysis",
+        "banking"
+      ]
+    },
+    {
+      "id": "science",
+      "label": "Science and engineering",
+      "terms": [
+        "laboratory",
+        "chemistry",
+        "physics",
+        "microscope",
+        "scientific experiment",
+        "engineering",
+        "biology"
+      ]
+    },
+    {
+      "id": "arts",
+      "label": "Arts and entertainment",
+      "terms": [
+        "drawing",
+        "painting",
+        "music performance",
+        "film",
+        "theater",
+        "dance",
+        "animation"
+      ]
+    },
+    {
+      "id": "gaming",
+      "label": "Video games",
+      "terms": [
+        "gameplay",
+        "speedrun",
+        "walkthrough",
+        "gaming livestream",
+        "simulator game",
+        "esports"
+      ]
+    },
+    {
+      "id": "lifestyle",
+      "label": "Lifestyle and personal activities",
+      "terms": [
+        "personal vlog",
+        "daily routine",
+        "home cleaning",
+        "makeup",
+        "fashion",
+        "family life"
+      ]
+    },
+    {
+      "id": "public_affairs",
+      "label": "Government and public affairs",
+      "terms": [
+        "election",
+        "parliament",
+        "public policy",
+        "court hearing",
+        "government"
+      ]
+    },
+    {
+      "id": "environment",
+      "label": "Environment and nature",
+      "terms": [
+        "wildlife",
+        "conservation",
+        "climate change",
+        "ecosystem",
+        "recycling",
+        "habitat"
+      ]
+    }
+  ]
+}
