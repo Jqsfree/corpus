@@ -99,21 +99,41 @@ def connect(path):
     return sqlite3.connect(Path(path).resolve().as_uri()+"?mode=ro", uri=True)
 
 
-def search(path, term, limit=20, domain=None, exact=False):
-    if not 1 <= limit <= 1000 or not normalized(term):
+def search(path, term, limit=20, domain=None, exact=False, mode="all", source=None):
+    query = normalized(term)
+    if not 1 <= limit <= 1000 or not query:
         raise ValueError("Nonempty term and limit 1..1000 required")
-    where = " AND EXISTS(SELECT 1 FROM domains d WHERE d.record=r.id AND d.domain=?)" if domain else ""
-    if exact:
-        sql = "SELECT r.id,r.payload FROM terms t JOIN records r ON r.id=t.record WHERE t.term=?"+where+" ORDER BY r.id LIMIT ?"
-        value = normalized(term)
-    else:
-        words = re.findall(r"[^\W_]+", term, re.UNICODE)
+    if mode not in {"all","any","phrase","prefix","exact"}:
+        raise ValueError("Unknown search mode")
+    filters, params = [], []
+    if domain:
+        filters.append("EXISTS(SELECT 1 FROM domains d WHERE d.record=r.id AND d.domain=?)")
+        params.append(domain)
+    if source:
+        filters.append("r.source=?")
+        params.append(source)
+    where = "".join(" AND "+f for f in filters)
+    with connect(path) as db:
+        if exact or mode == "exact":
+            sql = "SELECT r.id,r.payload FROM terms t JOIN records r ON r.id=t.record WHERE t.term=?"+where+" ORDER BY CASE WHEN r.text=? COLLATE NOCASE THEN 0 ELSE 1 END,r.source,r.record_id LIMIT ?"
+            return [with_hints(db,k,p) for k,p in db.execute(sql,[query,*params,query,limit])]
+        words = re.findall(r"[^\W_]+", query, re.UNICODE)
         if not words:
             raise ValueError("No searchable tokens")
-        value = " AND ".join('"'+w+'"' for w in words)
-        sql = "SELECT r.id,r.payload FROM search JOIN records r ON r.id=search.rowid WHERE search MATCH ?"+where+" ORDER BY bm25(search),r.id LIMIT ?"
-    with connect(path) as db:
-        return [with_hints(db,key,payload) for key,payload in db.execute(sql,[value]+([domain] if domain else [])+[limit])]
+        quoted = ['"'+w+'"' for w in words]
+        if mode == "phrase":
+            value = '"'+" ".join(words)+'"'
+        elif mode == "prefix":
+            value = " AND ".join(quoted[:-1]+[quoted[-1]+"*"])
+        else:
+            value = (" OR " if mode=="any" else " AND ").join(quoted)
+        # Rank exact whole term/alias hits first, then BM25 with preferred text weighted higher.
+        # Correlated term lookup uses the (record,term) primary key.
+        sql = ("SELECT r.id,r.payload FROM search JOIN records r ON r.id=search.rowid "
+               "WHERE search MATCH ?"+where+
+               " ORDER BY CASE WHEN EXISTS(SELECT 1 FROM terms t WHERE t.record=r.id AND t.term=?) THEN 0 ELSE 1 END,"
+               "bm25(search,2.0,1.0),r.source,r.record_id LIMIT ?")
+        return [with_hints(db,k,p) for k,p in db.execute(sql,[value,*params,query,limit])]
 
 
 def with_hints(db, key, payload):
